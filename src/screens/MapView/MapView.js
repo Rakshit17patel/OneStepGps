@@ -1,5 +1,5 @@
 import React, {useContext, useLayoutEffect, useRef, useState} from 'react';
-import {View, TouchableOpacity, StyleSheet} from 'react-native';
+import {View, TouchableOpacity, StyleSheet, Text} from 'react-native';
 import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -61,28 +61,32 @@ export default function Track({route}) {
       let isActive = true;
       const loadDevices = async () => {
         try {
-          let enriched = []
+          let enriched = [];
           const api = `${config.API_URL}/device?latest_point=true&api-key=${config.API_KEY}`;
           const response = await ApiService.get(api);
           const localData = await getItemData('apiData');
           if (localData && localData.length > 0) {
             enriched = response?.result_list?.map(apiItem => {
-            const localItem = localData?.find(
-              l => l.device_id === apiItem.device_id,
-            );
-            return localItem ? {...apiItem, 
-              display_name: localItem?.display_name,
-              make: localItem?.make,
-              model: localItem?.model,
-              factory_id: localItem?.factory_id,
-            } : apiItem;
-          });
+              const localItem = localData?.find(
+                l => l.device_id === apiItem.device_id,
+              );
+              return localItem
+                ? {
+                    ...apiItem,
+                    display_name: localItem?.display_name,
+                    make: localItem?.make,
+                    model: localItem?.model,
+                    factory_id: localItem?.factory_id,
+                  }
+                : apiItem;
+            });
           }
 
-          // const deviceInfo = enriched.find(latestData => latestData.display_name === 'Frank');
-          // console.log("🚀 ~ file: DeviceDetailPage.js ~ line 75 ~ fetchDevicesData ~ finalData", deviceInfo?.latest_device_point?.lat)
-
-          if (isActive) setApiData((enriched.length > 0 ? enriched : response?.result_list || []));
+          if (isActive) {
+            setApiData(
+              enriched.length > 0 ? enriched : response?.result_list || [],
+            );
+          }
         } catch (e) {
           console.log('Map fetch error:', e);
         }
@@ -134,17 +138,22 @@ export default function Track({route}) {
             <Marker
               key={device.device_id}
               coordinate={{latitude: lat, longitude: lng}}
-              title={`${device.display_name} (${device.latest_device_point?.device_state?.drive_status})`}
-              description={device?.latest_device_point?.device_state
-                ?.drive_status_lat_lng_distance?.display}
               pinColor={theme.appThemeSecondary}
               tracksViewChanges={false}>
-              <CustomMarker
-                index={index}
-                displayName={device.display_name}
-                width={40}
-                height={40}
-              />
+              <View style={styles.markerWrapper}>
+                <CustomMarker
+                  index={index}
+                  width={40}
+                  height={40}
+                  status={
+                    device?.latest_device_point?.device_state?.drive_status
+                  }
+                />
+
+                <View style={styles.textWrapper}>
+                  <Text style={styles.markerText}>{device.display_name}</Text>
+                </View>
+              </View>
             </Marker>
           );
         })}
@@ -158,4 +167,29 @@ const styles = StyleSheet.create({
   map: {height: '100%', width: '100%'},
   backButton: {padding: scale(10)},
   backIcon: {fontSize: scale(25), fontWeight: 'bold'},
+
+  // NEW MARKER WRAPPER STYLES
+  markerWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    borderRadius: 6,
+    maxWidth: 240,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  textWrapper: {
+    marginLeft: 6,
+    maxWidth: 160,
+  },
+  markerText: {
+    fontSize: 12,
+    color: '#000',
+    flexWrap: 'wrap',
+  },
 });

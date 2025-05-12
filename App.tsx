@@ -25,7 +25,7 @@ function App(): React.JSX.Element {
   const [appColorTheme, setAppColorTheme] = useState('');
   const systemThemeMode = useColorScheme();
   const colors =
-    Theme[appColorTheme == 'systemDefault' ? systemThemeMode : appColorTheme];
+    Theme[appColorTheme === 'systemDefault' ? systemThemeMode : appColorTheme];
 
   useEffect(() => {
     checkThemeMode();
