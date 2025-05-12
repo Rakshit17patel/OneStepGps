@@ -87,8 +87,7 @@ const HomePage = () => {
         });
       }
 
-      const finalData =
-        mergedData.length > 0 ? mergedData : response?.result_list || [];
+      const finalData = mergedData.length > 0 ? mergedData : response?.result_list || [];
       setApiData(finalData);
       setFilterApiData(finalData);
       setRefreshing(false);

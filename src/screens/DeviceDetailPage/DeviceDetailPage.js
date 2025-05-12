@@ -17,6 +17,7 @@ import themeColors from '../../utils/themeColors';
 import {SaveData as StoreItem, RetrieveData as getItemData} from '../../utils/AsyncStorageHandeler';
 import ApiService from '../../utils/apiService';
 import config from '../../utils/config';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function DeviceDetailPage({route}) {
   const [deviceData, setDeviceData] = useState(route.params?.device);
@@ -39,20 +40,33 @@ export default function DeviceDetailPage({route}) {
       headerStyle: {
         backgroundColor: colors?.navColor,
       },
+      headerLeft: () => (
+          <TouchableOpacity
+            onPress={() => navigationObj.goBack()}
+            style={styles.backButton}>
+            <Ionicons
+              name="arrow-back"
+              style={[styles.backIcon, {color: colors.heading}]}
+            />
+          </TouchableOpacity>
+        ),
     });
   }, [navigationObj, deviceData]);
 
   useFocusEffect(
     React.useCallback(() => {
+      if (edit) return;
+  
       fetchDevicesData();
+  
       const interval = setInterval(() => {
-        console.log("🚀 ~ file: DeviceDetailPage.js ~ line 49 ~ interval ~ interval")
         fetchDevicesData();
-      }, 5000); 
+      }, 5000);
   
       return () => clearInterval(interval);
-    }, [])
+    }, [edit])
   );
+  
 
     const fetchDevicesData = async () => {
       try {
@@ -79,11 +93,10 @@ export default function DeviceDetailPage({route}) {
 
         const deviceInfo = finalData.find(latestData => latestData.device_id === deviceData.device_id,);
 
-        console.log("🚀 ~ file: DeviceDetailPage.js ~ line 75 ~ fetchDevicesData ~ finalData", deviceInfo?.latest_device_point?.lat)
         setDeviceData(deviceInfo);
         setTempDeviceData(deviceInfo);
 
-        await StoreItem('apiData', JSON.stringify(deviceInfo));
+        await StoreItem('apiData', JSON.stringify(finalData));
       } catch (error) {
         console.log('Error fetching devices:', error);
       }
@@ -111,7 +124,6 @@ export default function DeviceDetailPage({route}) {
   };
 
   const handleEditPress = useCallback(() => {
-    console.log('Edit button pressed');
     setEdit(true);
   }, []);
 
@@ -312,7 +324,7 @@ export default function DeviceDetailPage({route}) {
               />
               <View style={styles.modalButtonRow}>
                 <TouchableOpacity
-                  onPress={saveDeviceInfo}
+                  onPress={()=>saveDeviceInfo()}
                   activeOpacity={0.5}
                   style={styles.modalButton}>
                   <Text style={styles.modalButtonText}>Save</Text>
@@ -337,6 +349,8 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 15,
   },
+  backButton: {padding: scale(10)},
+  backIcon: {fontSize: scale(25), fontWeight: 'bold'},
   section: {
     marginBottom: 20,
     padding: 15,
@@ -396,12 +410,12 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     backgroundColor: '#007bff',
-    paddingVertical: scale(10),
-    paddingHorizontal: scale(20),
     borderRadius: scale(5),
     alignItems: 'center',
   },
   modalButtonText: {
+    paddingVertical: scale(10),
+    paddingHorizontal: scale(20),
     color: 'white',
   },
 });
