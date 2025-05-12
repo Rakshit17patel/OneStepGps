@@ -78,7 +78,6 @@ function App(): React.JSX.Element {
         <GestureHandlerRootView style={{flex: 1}}>
           <StatusBar
             backgroundColor={colors?.appThemePrimary}
-            barStyle={'light-content'}
             translucent={false}
           />
           <ThemeContext.Provider

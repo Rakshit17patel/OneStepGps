@@ -78,7 +78,12 @@ const HomePage = () => {
           const localItem = localData.find(
             local => local.device_id === apiItem.device_id,
           );
-          return localItem ? {...apiItem, ...localItem} : apiItem;
+          return localItem ? {...apiItem, 
+            display_name: localItem?.display_name,
+            make: localItem?.make,
+            model: localItem?.model,
+            factory_id: localItem?.factory_id,
+          }  : apiItem;
         });
       }
 
@@ -125,7 +130,7 @@ const HomePage = () => {
         </Text>
       </View>
 
-      <Text
+      {/* <Text
         style={[
           styles.statusText,
           {
@@ -136,7 +141,7 @@ const HomePage = () => {
           },
         ]}>
         {device?.active_state}
-      </Text>
+      </Text> */}
     </TouchableOpacity>
   );
 

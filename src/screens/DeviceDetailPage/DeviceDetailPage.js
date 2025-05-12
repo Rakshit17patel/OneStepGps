@@ -9,12 +9,14 @@ import {
   TextInput,
   TouchableWithoutFeedback,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {scale} from '../../utils/scaling';
 import {ThemeContext} from '../../context/Theme';
 import themeColors from '../../utils/themeColors';
-import {SaveData as StoreItem} from '../../utils/AsyncStorageHandeler';
+import {SaveData as StoreItem, RetrieveData as getItemData} from '../../utils/AsyncStorageHandeler';
+import ApiService from '../../utils/apiService';
+import config from '../../utils/config';
 
 export default function DeviceDetailPage({route}) {
   const [deviceData, setDeviceData] = useState(route.params?.device);
@@ -39,6 +41,53 @@ export default function DeviceDetailPage({route}) {
       },
     });
   }, [navigationObj, deviceData]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchDevicesData();
+      const interval = setInterval(() => {
+        console.log("🚀 ~ file: DeviceDetailPage.js ~ line 49 ~ interval ~ interval")
+        fetchDevicesData();
+      }, 5000); 
+  
+      return () => clearInterval(interval);
+    }, [])
+  );
+
+    const fetchDevicesData = async () => {
+      try {
+        let localData = await getItemData('apiData');
+        let mergedData = [];
+        const api = `${config.API_URL}/device?latest_point=true&api-key=${config.API_KEY}`;
+        const response = await ApiService.get(api);
+  
+        if (localData && localData.length > 0) {
+          mergedData = response?.result_list?.map(apiItem => {
+            const localItem = localData.find(
+              local => local.device_id === apiItem.device_id,
+            );
+            return localItem ? {...apiItem, 
+              display_name: localItem?.display_name,
+              make: localItem?.make,
+              model: localItem?.model,
+              factory_id: localItem?.factory_id,
+            }  : apiItem;
+          });
+        }
+
+        const finalData = mergedData.length > 0 ? mergedData : response?.result_list || [];
+
+        const deviceInfo = finalData.find(latestData => latestData.device_id === deviceData.device_id,);
+
+        console.log("🚀 ~ file: DeviceDetailPage.js ~ line 75 ~ fetchDevicesData ~ finalData", deviceInfo?.latest_device_point?.lat)
+        setDeviceData(deviceInfo);
+        setTempDeviceData(deviceInfo);
+
+        await StoreItem('apiData', JSON.stringify(deviceInfo));
+      } catch (error) {
+        console.log('Error fetching devices:', error);
+      }
+    };
 
   const saveDeviceInfo = async () => {
     try {
@@ -102,10 +151,10 @@ export default function DeviceDetailPage({route}) {
           Location
         </Text>
         <Text style={[styles.text, {color: colors?.heading}]}>
-          Latitude: {deviceData?.latest_device_point?.lat?.toFixed(5)}
+          Latitude: {deviceData?.latest_device_point?.lat?.toFixed(7)}
         </Text>
         <Text style={[styles.text, {color: colors?.heading}]}>
-          Longitude: {deviceData?.latest_device_point?.lng?.toFixed(5)}
+          Longitude: {deviceData?.latest_device_point?.lng?.toFixed(7)}
         </Text>
       </View>
 
@@ -113,7 +162,7 @@ export default function DeviceDetailPage({route}) {
         <Text style={[styles.sectionTitle, {color: colors?.heading}]}>
           Device Status
         </Text>
-        <Text style={[styles.text, {color: colors?.heading}]}>
+        {/* <Text style={[styles.text, {color: colors?.heading}]}>
           Status:{' '}
           <Text
             style={{
@@ -124,20 +173,32 @@ export default function DeviceDetailPage({route}) {
             }}>
             {deviceData.active_state}
           </Text>
-        </Text>
+        </Text> */}
+        {/* <Text style={[styles.text, {color: colors?.heading}]}>
+          Drive Status:{' '}
+          <Text
+            style={{
+              color:
+                deviceData?.latest_device_point?.device_state?.drive_status?.toLowerCase() == 'on'
+                  ? colors?.success
+                  : colors?.pending,
+            }}>
+            {deviceData?.latest_device_point?.device_state?.drive_status}
+          </Text>
+        </Text> */}
         <Text style={[styles.text, {color: colors?.heading}]}>
           Drive Status:{' '}
           {deviceData?.latest_device_point?.device_state?.drive_status}
         </Text>
         <Text style={[styles.text, {color: colors?.heading}]}>
-          Last Updated:
-        </Text>
-        <Text style={[styles.text, {color: colors?.heading}]}>
-          {deviceData?.latest_device_point?.dt_server
-            ? new Date(
-                deviceData.latest_device_point.dt_server,
-              ).toLocaleDateString()
-            : 'N/A'}
+          Last Updated: {` `}
+          <Text style={[styles.text, {color: colors?.heading}]}>
+            {deviceData?.latest_device_point?.dt_server
+              ? new Date(
+                  deviceData.latest_device_point.dt_server,
+                ).toLocaleDateString()
+              : 'N/A'}
+          </Text>
         </Text>
         <Text style={[styles.text, {color: colors?.heading}]}>
           Date:{' '}

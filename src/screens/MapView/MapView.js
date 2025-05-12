@@ -61,23 +61,35 @@ export default function Track({route}) {
       let isActive = true;
       const loadDevices = async () => {
         try {
+          let enriched = []
           const api = `${config.API_URL}/device?latest_point=true&api-key=${config.API_KEY}`;
           const response = await ApiService.get(api);
           const localData = await getItemData('apiData');
-          const enriched = response?.result_list?.map(apiItem => {
+          if (localData && localData.length > 0) {
+            enriched = response?.result_list?.map(apiItem => {
             const localItem = localData?.find(
               l => l.device_id === apiItem.device_id,
             );
-            return localItem ? {...apiItem, ...localItem} : apiItem;
+            return localItem ? {...apiItem, 
+              display_name: localItem?.display_name,
+              make: localItem?.make,
+              model: localItem?.model,
+              factory_id: localItem?.factory_id,
+            } : apiItem;
           });
-          if (isActive) setApiData(enriched || []);
+          }
+
+          // const deviceInfo = enriched.find(latestData => latestData.display_name === 'Frank');
+          // console.log("🚀 ~ file: DeviceDetailPage.js ~ line 75 ~ fetchDevicesData ~ finalData", deviceInfo?.latest_device_point?.lat)
+
+          if (isActive) setApiData((enriched.length > 0 ? enriched : response?.result_list || []));
         } catch (e) {
-          console.error('Map fetch error:', e);
+          console.log('Map fetch error:', e);
         }
       };
 
       loadDevices();
-      const intervalId = setInterval(loadDevices, 10000);
+      const intervalId = setInterval(loadDevices, 5000);
       return () => {
         clearInterval(intervalId);
         isActive = false;
@@ -123,7 +135,8 @@ export default function Track({route}) {
               key={device.device_id}
               coordinate={{latitude: lat, longitude: lng}}
               title={`${device.display_name} (${device.latest_device_point?.device_state?.drive_status})`}
-              description={device.active_state}
+              description={device?.latest_device_point?.device_state
+                ?.drive_status_lat_lng_distance?.display}
               pinColor={theme.appThemeSecondary}
               tracksViewChanges={false}>
               <CustomMarker
