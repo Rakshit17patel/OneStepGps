@@ -20,12 +20,10 @@ export const RemoveData = async key => {
 export const RetrieveData = async key => {
   try {
     const value = await AsyncStorage.getItem(key);
-    // //console.log("🚀 ~ RetrieveData ~ value: ", key, value)
-    //
+    //console.log("🚀 ~ RetrieveData ~ value: ", key, value)
     if (value !== null) {
       return JSON.parse(value);
     } else {
-      //
       return null;
     }
   } catch (error) {
@@ -56,5 +54,3 @@ export const RemoveAllItems = async () => {
     //console.log('Error removing items from AsyncStorage:', error);
   }
 };
-
-// ['locationInfo','addressInfo','loginInfo','notificationsAccess','remeberLoginInfo','isLocationServicable','premiumMembershipMessage','allCustomerTypes','defaultCustomerType']

@@ -50,8 +50,6 @@ export default function Router() {
   return (
     <BottomTab.Navigator
       initialRouteName={'Home'}
-      // tabBarOptions={{
-      // }}
       screenOptions={{
         tabBarLabelStyle: {
           fontSize: scale(12),

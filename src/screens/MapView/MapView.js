@@ -1,6 +1,6 @@
 import React, {useContext, useLayoutEffect, useRef, useState} from 'react';
 import {View, TouchableOpacity, StyleSheet, Text} from 'react-native';
-import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
+import MapView, {Callout, Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -138,22 +138,42 @@ export default function Track({route}) {
             <Marker
               key={device.device_id}
               coordinate={{latitude: lat, longitude: lng}}
-              pinColor={theme.appThemeSecondary}
-              tracksViewChanges={false}>
-              <View style={styles.markerWrapper}>
-                <CustomMarker
-                  index={index}
-                  width={40}
-                  height={40}
-                  status={
-                    device?.latest_device_point?.device_state?.drive_status
-                  }
-                />
-
-                <View style={styles.textWrapper}>
-                  <Text style={styles.markerText}>{device.display_name}</Text>
+              calloutAnchor={{x: 2.0, y: 0.5}}
+              anchor={{x: 0.5, y: 1}}
+              tracksViewChanges={Platform.OS === 'android'}>
+              {Platform.OS === 'ios' ? (
+                <View style={styles.markerWrapper}>
+                  <CustomMarker
+                    index={index}
+                    width={40}
+                    height={40}
+                    status={
+                      device?.latest_device_point?.device_state?.drive_status
+                    }
+                  />
+                  <View style={styles.textWrapper}>
+                    <Text style={styles.markerText}>{device.display_name}</Text>
+                  </View>
                 </View>
-              </View>
+              ) : (
+                <>
+                  <CustomMarker
+                    index={index}
+                    width={40}
+                    height={40}
+                    status={
+                      device?.latest_device_point?.device_state?.drive_status
+                    }
+                  />
+                  <Callout tooltip>
+                    <View style={styles.calloutContainer}>
+                      <Text style={styles.calloutText}>
+                        {device.display_name}
+                      </Text>
+                    </View>
+                  </Callout>
+                </>
+              )}
             </Marker>
           );
         })}
@@ -165,10 +185,8 @@ export default function Track({route}) {
 const styles = StyleSheet.create({
   container: {flex: 1},
   map: {height: '100%', width: '100%'},
-  backButton: {padding: scale(10)},
+  backButton: {padding: scale(5)},
   backIcon: {fontSize: scale(25), fontWeight: 'bold'},
-
-  // NEW MARKER WRAPPER STYLES
   markerWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -191,5 +209,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#000',
     flexWrap: 'wrap',
+  },
+  calloutContainer: {
+    backgroundColor: 'white',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    minWidth: 180,
+    maxWidth: 280,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  calloutText: {
+    fontSize: 13,
+    color: '#000',
+    textAlign: 'center',
   },
 });

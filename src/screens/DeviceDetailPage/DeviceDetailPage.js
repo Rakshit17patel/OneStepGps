@@ -14,7 +14,10 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {scale} from '../../utils/scaling';
 import {ThemeContext} from '../../context/Theme';
 import themeColors from '../../utils/themeColors';
-import {SaveData as StoreItem, RetrieveData as getItemData} from '../../utils/AsyncStorageHandeler';
+import {
+  SaveData as StoreItem,
+  RetrieveData as getItemData,
+} from '../../utils/AsyncStorageHandeler';
 import ApiService from '../../utils/apiService';
 import config from '../../utils/config';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -41,66 +44,71 @@ export default function DeviceDetailPage({route}) {
         backgroundColor: colors?.navColor,
       },
       headerLeft: () => (
-          <TouchableOpacity
-            onPress={() => navigationObj.goBack()}
-            style={styles.backButton}>
-            <Ionicons
-              name="arrow-back"
-              style={[styles.backIcon, {color: colors.heading}]}
-            />
-          </TouchableOpacity>
-        ),
+        <TouchableOpacity
+          onPress={() => navigationObj.goBack()}
+          style={styles.backButton}>
+          <Ionicons
+            name="arrow-back"
+            style={[styles.backIcon, {color: colors.heading}]}
+          />
+        </TouchableOpacity>
+      ),
     });
   }, [navigationObj, deviceData]);
 
   useFocusEffect(
     React.useCallback(() => {
       if (edit) return;
-  
+
       fetchDevicesData();
-  
+
       const interval = setInterval(() => {
         fetchDevicesData();
       }, 5000);
-  
+
       return () => clearInterval(interval);
-    }, [edit])
+    }, [edit]),
   );
-  
 
-    const fetchDevicesData = async () => {
-      try {
-        let localData = await getItemData('apiData');
-        let mergedData = [];
-        const api = `${config.API_URL}/device?latest_point=true&api-key=${config.API_KEY}`;
-        const response = await ApiService.get(api);
-  
-        if (localData && localData.length > 0) {
-          mergedData = response?.result_list?.map(apiItem => {
-            const localItem = localData.find(
-              local => local.device_id === apiItem.device_id,
-            );
-            return localItem ? {...apiItem, 
-              display_name: localItem?.display_name,
-              make: localItem?.make,
-              model: localItem?.model,
-              factory_id: localItem?.factory_id,
-            }  : apiItem;
-          });
-        }
+  const fetchDevicesData = async () => {
+    try {
+      let localData = await getItemData('apiData');
+      let mergedData = [];
+      const api = `${config.API_URL}/device?latest_point=true&api-key=${config.API_KEY}`;
+      const response = await ApiService.get(api);
 
-        const finalData = mergedData.length > 0 ? mergedData : response?.result_list || [];
-
-        const deviceInfo = finalData.find(latestData => latestData.device_id === deviceData.device_id,);
-
-        setDeviceData(deviceInfo);
-        setTempDeviceData(deviceInfo);
-
-        await StoreItem('apiData', JSON.stringify(finalData));
-      } catch (error) {
-        console.log('Error fetching devices:', error);
+      if (localData && localData.length > 0) {
+        mergedData = response?.result_list?.map(apiItem => {
+          const localItem = localData.find(
+            local => local.device_id === apiItem.device_id,
+          );
+          return localItem
+            ? {
+                ...apiItem,
+                display_name: localItem?.display_name,
+                make: localItem?.make,
+                model: localItem?.model,
+                factory_id: localItem?.factory_id,
+              }
+            : apiItem;
+        });
       }
-    };
+
+      const finalData =
+        mergedData.length > 0 ? mergedData : response?.result_list || [];
+
+      const deviceInfo = finalData.find(
+        latestData => latestData.device_id === deviceData.device_id,
+      );
+
+      setDeviceData(deviceInfo);
+      setTempDeviceData(deviceInfo);
+
+      await StoreItem('apiData', JSON.stringify(finalData));
+    } catch (error) {
+      console.log('Error fetching devices:', error);
+    }
+  };
 
   const saveDeviceInfo = async () => {
     try {
@@ -174,30 +182,7 @@ export default function DeviceDetailPage({route}) {
         <Text style={[styles.sectionTitle, {color: colors?.heading}]}>
           Device Status
         </Text>
-        {/* <Text style={[styles.text, {color: colors?.heading}]}>
-          Status:{' '}
-          <Text
-            style={{
-              color:
-                deviceData?.active_state === 'active'
-                  ? colors?.success
-                  : colors?.pending,
-            }}>
-            {deviceData.active_state}
-          </Text>
-        </Text> */}
-        {/* <Text style={[styles.text, {color: colors?.heading}]}>
-          Drive Status:{' '}
-          <Text
-            style={{
-              color:
-                deviceData?.latest_device_point?.device_state?.drive_status?.toLowerCase() == 'on'
-                  ? colors?.success
-                  : colors?.pending,
-            }}>
-            {deviceData?.latest_device_point?.device_state?.drive_status}
-          </Text>
-        </Text> */}
+
         <Text style={[styles.text, {color: colors?.heading}]}>
           Drive Status:{' '}
           {deviceData?.latest_device_point?.device_state?.drive_status}
@@ -324,7 +309,7 @@ export default function DeviceDetailPage({route}) {
               />
               <View style={styles.modalButtonRow}>
                 <TouchableOpacity
-                  onPress={()=>saveDeviceInfo()}
+                  onPress={() => saveDeviceInfo()}
                   activeOpacity={0.5}
                   style={styles.modalButton}>
                   <Text style={styles.modalButtonText}>Save</Text>
@@ -349,7 +334,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 15,
   },
-  backButton: {padding: scale(10)},
+  backButton: {padding: scale(5)},
   backIcon: {fontSize: scale(25), fontWeight: 'bold'},
   section: {
     marginBottom: 20,
